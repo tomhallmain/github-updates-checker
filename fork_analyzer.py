@@ -1,6 +1,6 @@
 import os
 import sys
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import List, Dict, Any, Set, Tuple
 from github import Github
 from github.Repository import Repository
@@ -106,7 +106,12 @@ class ForkAnalyzer:
         
         # Recent activity bonus
         if metrics['last_commit']:
-            days_since_last_commit = (datetime.now() - metrics['last_commit']).days
+            now = datetime.now(timezone.utc)
+            last_commit = metrics['last_commit']
+            # GitHub API dates may be offset-aware (UTC) or naive; normalize for subtraction
+            if last_commit.tzinfo is None:
+                last_commit = last_commit.replace(tzinfo=timezone.utc)
+            days_since_last_commit = (now - last_commit).days
             if days_since_last_commit < 30:
                 score += 20  # Bonus for recent activity
         
@@ -205,7 +210,8 @@ def main():
                 print(f"  - {change['fork_name']}")
                 print(f"    URL: {change['fork_url']}")
                 if change['commit_message']:
-                    print(f"    Commit message: {change['commit_message'].split('\n')[0]}")
+                    first_line = change['commit_message'].split('\n')[0]
+                    print(f"    Commit message: {first_line}")
                 print(f"    Changes: +{change['additions']} -{change['deletions']}")
             print("-" * 80)
             

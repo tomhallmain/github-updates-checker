@@ -1,8 +1,10 @@
 import sys
 import os
+import logging
+import traceback
 from typing import Dict, Any, List
-from PyQt6.QtWidgets import (QApplication, QMainWindow, QWidget, QVBoxLayout, 
-                            QHBoxLayout, QPushButton, QLineEdit, QTabWidget, 
+from PyQt6.QtWidgets import (QApplication, QMainWindow, QWidget, QVBoxLayout,
+                            QHBoxLayout, QPushButton, QLineEdit, QTabWidget,
                             QTableWidget, QTableWidgetItem, QLabel, QComboBox,
                             QTextEdit, QMessageBox, QProgressBar)
 from PyQt6.QtCore import Qt, QThread, pyqtSignal
@@ -10,10 +12,11 @@ import pandas as pd
 from dotenv import load_dotenv
 from fork_analyzer import ForkAnalyzer
 from ecosystem_analyzer import EcosystemAnalyzer
+from ui_styles import DARK_STYLESHEET
 
 class AnalysisWorker(QThread):
     """Worker thread for running analyses without freezing the GUI."""
-    finished = pyqtSignal(dict)
+    finished = pyqtSignal(object)  # dict from ecosystem analysis, tuple from fork analysis
     progress = pyqtSignal(str)
     error = pyqtSignal(str)
     
@@ -36,7 +39,8 @@ class AnalysisWorker(QThread):
             
             self.finished.emit(results)
         except Exception as e:
-            self.error.emit(str(e))
+            full_error = "".join(traceback.format_exception(type(e), e, e.__traceback__))
+            self.error.emit(full_error)
 
 class GitHubAnalyzerGUI(QMainWindow):
     def __init__(self):
@@ -48,8 +52,9 @@ class GitHubAnalyzerGUI(QMainWindow):
         load_dotenv()
         self.github_token = os.getenv('GITHUB_TOKEN')
         if not self.github_token:
-            QMessageBox.critical(self, "Error", 
-                               "GITHUB_TOKEN environment variable not set")
+            msg = "GITHUB_TOKEN environment variable not set"
+            logging.error(msg)
+            QMessageBox.critical(self, "Error", msg)
             sys.exit(1)
         
         self.init_ui()
@@ -73,6 +78,7 @@ class GitHubAnalyzerGUI(QMainWindow):
         
         # Analyze button
         self.analyze_button = QPushButton("Analyze")
+        self.analyze_button.setObjectName("analyzeButton")
         self.analyze_button.clicked.connect(self.start_analysis)
         input_layout.addWidget(self.analyze_button)
         
@@ -134,7 +140,9 @@ class GitHubAnalyzerGUI(QMainWindow):
     def start_analysis(self):
         repo_name = self.repo_input.text().strip()
         if not repo_name:
-            QMessageBox.warning(self, "Error", "Please enter a repository name")
+            msg = "Please enter a repository name"
+            logging.warning(msg)
+            QMessageBox.warning(self, "Error", msg)
             return
         
         # Disable UI elements during analysis
@@ -167,7 +175,10 @@ class GitHubAnalyzerGUI(QMainWindow):
         self.progress_bar.hide()
     
     def handle_error(self, error_message: str):
-        QMessageBox.critical(self, "Error", f"Analysis failed: {error_message}")
+        logging.error("Analysis failed:\n%s", error_message)
+        first_line = error_message.split("\n")[0] if error_message else "Unknown error"
+        popup_msg = f"Analysis failed: {first_line}\n\nFull error and stack trace have been written to the log."
+        QMessageBox.critical(self, "Error", popup_msg)
         self.analyze_button.setEnabled(True)
         self.progress_bar.hide()
     
@@ -277,8 +288,33 @@ class GitHubAnalyzerGUI(QMainWindow):
         filtered_df = self.df[mask]
         self.update_search_table(filtered_df)
 
+def _setup_logging() -> None:
+    """Configure logging to console and file with tracebacks."""
+    log_dir = os.path.dirname(os.path.abspath(__file__))
+    log_path = os.path.join(log_dir, "github_analyzer.log")
+    fmt = "%(asctime)s [%(levelname)s] %(message)s"
+    datefmt = "%Y-%m-%d %H:%M:%S"
+
+    root = logging.getLogger()
+    root.setLevel(logging.DEBUG)
+    for h in list(root.handlers):
+        root.removeHandler(h)
+
+    fh = logging.FileHandler(log_path, encoding="utf-8")
+    fh.setLevel(logging.DEBUG)
+    fh.setFormatter(logging.Formatter(fmt, datefmt=datefmt))
+    root.addHandler(fh)
+
+    ch = logging.StreamHandler(sys.stderr)
+    ch.setLevel(logging.INFO)
+    ch.setFormatter(logging.Formatter(fmt, datefmt=datefmt))
+    root.addHandler(ch)
+
+
 def main():
+    _setup_logging()
     app = QApplication(sys.argv)
+    app.setStyleSheet(DARK_STYLESHEET)
     window = GitHubAnalyzerGUI()
     window.show()
     sys.exit(app.exec())
