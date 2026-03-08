@@ -162,8 +162,8 @@ def main():
         sys.exit(1)
     
     if len(sys.argv) != 2:
-        print("Usage: python fork_analyzer.py <repository_name>")
-        print("Example: python fork_analyzer.py octocat/Hello-World")
+        print("Usage: python -m git_updates_checker.analyzers.fork <repository_name>")
+        print("Example: python -m git_updates_checker.analyzers.fork octocat/Hello-World")
         sys.exit(1)
     
     repo_name = sys.argv[1]

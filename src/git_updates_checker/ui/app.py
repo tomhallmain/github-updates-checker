@@ -10,9 +10,9 @@ from PyQt6.QtWidgets import (QApplication, QMainWindow, QWidget, QVBoxLayout,
 from PyQt6.QtCore import Qt, QThread, pyqtSignal
 import pandas as pd
 from dotenv import load_dotenv
-from fork_analyzer import ForkAnalyzer
-from ecosystem_analyzer import EcosystemAnalyzer
-from ui_styles import DARK_STYLESHEET
+from git_updates_checker.analyzers.fork import ForkAnalyzer
+from git_updates_checker.analyzers.ecosystem import EcosystemAnalyzer
+from git_updates_checker.ui.styles import DARK_STYLESHEET
 
 class AnalysisWorker(QThread):
     """Worker thread for running analyses without freezing the GUI."""

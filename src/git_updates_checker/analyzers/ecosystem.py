@@ -183,8 +183,8 @@ def main():
         sys.exit(1)
     
     if len(sys.argv) != 2:
-        print("Usage: python ecosystem_analyzer.py <repository_name>")
-        print("Example: python ecosystem_analyzer.py octocat/Hello-World")
+        print("Usage: python -m git_updates_checker.analyzers.ecosystem <repository_name>")
+        print("Example: python -m git_updates_checker.analyzers.ecosystem octocat/Hello-World")
         sys.exit(1)
     
     repo_name = sys.argv[1]

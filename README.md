@@ -4,7 +4,7 @@ A comprehensive tool for analyzing GitHub repositories, their forks, and contrib
 
 ## Features
 
-### 1. Fork Analyzer (`fork_analyzer.py`)
+### 1. Fork Analyzer (`src/git_updates_checker/analyzers/fork.py`)
 Analyzes all forks of a GitHub repository to identify the most active and valuable forks. Calculates an activity score based on:
 - Number of stars (up to 50 points)
 - Number of commits (up to 25 points)
@@ -12,14 +12,14 @@ Analyzes all forks of a GitHub repository to identify the most active and valuab
 - Recent activity bonus (20 points for commits within the last 30 days)
 - File changes compared to the original repository
 
-### 2. Ecosystem Analyzer (`ecosystem_analyzer.py`)
+### 2. Ecosystem Analyzer (`src/git_updates_checker/analyzers/ecosystem.py`)
 Analyzes the ecosystem around a repository by examining contributor interests and relationships:
 - Finds common repositories that contributors star, fork, or contribute to
 - Builds a network graph of contributor relationships
 - Identifies shared interests among repository contributors
 - Generates visualizations of the contributor network
 
-### 3. GUI Application (`github_analyzer_gui.py`)
+### 3. GUI Application (`src/git_updates_checker/ui/app.py`)
 A PyQt6-based graphical interface that provides:
 - Interactive repository analysis
 - Table view of analysis results
@@ -52,33 +52,43 @@ A PyQt6-based graphical interface that provides:
 
 ## Usage
 
+Before running, ensure Python can import from the `src` directory:
+
+```bash
+# PowerShell
+$env:PYTHONPATH="src"
+
+# bash/zsh
+export PYTHONPATH=src
+```
+
 ### Command Line
 
 **Fork Analysis:**
 ```bash
-python fork_analyzer.py owner/repository
+python -m git_updates_checker.analyzers.fork owner/repository
 ```
 
 Example:
 ```bash
-python fork_analyzer.py octocat/Hello-World
+python -m git_updates_checker.analyzers.fork octocat/Hello-World
 ```
 
 **Ecosystem Analysis:**
 ```bash
-python ecosystem_analyzer.py owner/repository
+python -m git_updates_checker.analyzers.ecosystem owner/repository
 ```
 
 Example:
 ```bash
-python ecosystem_analyzer.py octocat/Hello-World
+python -m git_updates_checker.analyzers.ecosystem octocat/Hello-World
 ```
 
 ### GUI Application
 
 Launch the graphical interface:
 ```bash
-python github_analyzer_gui.py
+python -m git_updates_checker.ui.app
 ```
 
 The GUI allows you to:
@@ -105,9 +115,14 @@ The GUI allows you to:
 
 ```
 git-updates-checker/
-├── fork_analyzer.py          # Fork analysis module
-├── ecosystem_analyzer.py      # Ecosystem analysis module
-├── github_analyzer_gui.py     # GUI application
+├── src/
+│   └── git_updates_checker/
+│       ├── analyzers/
+│       │   ├── fork.py        # Fork analysis module
+│       │   └── ecosystem.py   # Ecosystem analysis module
+│       └── ui/
+│           ├── app.py         # GUI application
+│           └── styles.py      # UI stylesheet
 ├── requirements.txt           # Python dependencies
 ├── .env.example              # Example environment file
 ├── .gitignore                # Git ignore rules

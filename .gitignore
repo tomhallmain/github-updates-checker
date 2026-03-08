@@ -51,3 +51,5 @@ interest_graph.png
 
 # Logs
 *.log
+
+temp_*
